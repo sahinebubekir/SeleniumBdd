@@ -63,6 +63,7 @@ pipeline {
                 reportDir: 'target/cucumber-reports',
                 reportFiles: 'cucumber-pretty.html',
                 reportName: 'Cucumber Test Report',
+                allowMissing: false,
                 alwaysLinkToLastBuild: true,
                 keepAll: true
             ])
