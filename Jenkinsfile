@@ -54,17 +54,18 @@ pipeline {
 		always {
 			script {
 				sh '''
-                    docker rm -f selenium-chrome || true
-                    docker network rm test-network || true
-                '''
-            }
-            cleanWs()
+                docker rm -f selenium-chrome || true
+                docker network rm test-network || true
+            '''
         }
-        success {
-			echo 'Tests completed successfully!'
-        }
-        failure {
-			echo 'Tests failed!'
-        }
+        archiveArtifacts artifacts: 'target/cucumber-reports/**/*.*', allowEmptyArchive: true
+        cleanWs()
     }
+    success {
+			echo 'Tests completed successfully!'
+    }
+    failure {
+			echo 'Tests failed!'
+    }
+}
 }
