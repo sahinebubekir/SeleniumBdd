@@ -44,6 +44,7 @@ public class DriverFactory {
                         options.addArguments("--no-sandbox");
                         options.addArguments("--disable-dev-shm-usage");
                         options.addArguments("--disable-gpu"); // opsiyonel
+                        break;
                     }
                     driverThreadLocal.set(new ChromeDriver(options));
                     break;
