@@ -2,8 +2,8 @@ pipeline {
     agent any
 
     environment {
-        SELENIUM_URL = 'http://localhost:4444/wd/hub'
-        MAVEN_IMAGE = 'maven:3.8.7-openjdk-17'
+        SELENIUM_URL = 'http://selenium-chrome:4444/wd/hub'  // Container ismi ile erişim
+        MAVEN_IMAGE = 'maven:3.9.3-openjdk-17'
     }
 
     stages {
@@ -12,7 +12,8 @@ pipeline {
                 script {
                     sh '''
                         docker rm -f selenium-chrome || true
-                        docker run -d --name selenium-chrome -p 4444:4444 selenium/standalone-chrome:latest
+                        docker network create selenium-net || true
+                        docker run -d --name selenium-chrome --network selenium-net -p 4444:4444 selenium/standalone-chrome:latest
                     '''
                     sleep 10
                 }
@@ -28,7 +29,7 @@ pipeline {
         stage('Run Maven Tests') {
             steps {
                 script {
-                    docker.image(MAVEN_IMAGE).inside('--shm-size=2g') {
+                    docker.image(MAVEN_IMAGE).inside("--shm-size=2g -v ${env.WORKSPACE}:/app -w /app --network selenium-net") {
                         sh "mvn clean verify -Dcucumber.filter.tags=@chrome -Dselenium.url=${SELENIUM_URL}"
                     }
                 }
@@ -39,6 +40,7 @@ pipeline {
             steps {
                 script {
                     sh 'docker rm -f selenium-chrome || true'
+                    sh 'docker network rm selenium-net || true'
                 }
             }
         }
@@ -48,6 +50,7 @@ pipeline {
         always {
             echo 'Cleaning up...'
             sh 'docker rm -f selenium-chrome || true'
+            sh 'docker network rm selenium-net || true'
         }
     }
 }
