@@ -30,51 +30,37 @@ pipeline {
             }
         }
 
-        stage('Run Tests') {
+    }
+
+		stage('Run Tests') {
 			steps {
 				script {
 					sh '''
-                        docker run --rm \
-                            --network test-network \
-                            -v "${WORKSPACE}":/app \
-                            -w /app \
-                            maven:3.9.2-eclipse-temurin-17 \
-                            mvn clean test \
-                            -Drun.mode=remote \
-                            -Dselenium.url=http://selenium-chrome:4444/wd/hub \
-                            -Dbrowser=chrome
-                    '''
-                }
-            }
-        }
-    }
+					docker run --rm \
+						--network test-network \
+						-v "${WORKSPACE}":/app \
+						-w /app \
+						maven:3.9.2-eclipse-temurin-17 \
+						mvn clean verify \
+						-Drun.mode=remote \
+						-Dselenium.url=http://selenium-chrome:4444/wd/hub \
+						-Dbrowser=chrome
+				'''
+			}
+		}
+	}
 
-    post {
-		always {
-			script {
-				sh '''
-                    docker rm -f selenium-chrome || true
-                    docker network rm test-network || true
-                '''
-            }
-
-            // publishHTML doğrudan burada, script bloğu olmadan çağrılmalı:
-            publishHTML(target: [
-                reportDir: 'target/cucumber-reports',
-                reportFiles: 'cucumber-pretty.html',
-                reportName: 'Cucumber Test Report',
-                allowMissing: false,
-                alwaysLinkToLastBuild: true,
-                keepAll: true,
-                allowMultipleReports: false
-            ])
-            cleanWs()
-        }
-        success {
-			echo 'Tests completed successfully!'
-        }
-        failure {
-			echo 'Tests failed!'
-        }
-    }
+		post {
+				always {
+					publishHTML(target: [
+					reportDir: 'target/cucumber-reports',
+					reportFiles: 'index.html',
+					reportName: 'Cucumber Test Report',
+					allowMissing: false,
+					alwaysLinkToLastBuild: true,
+					keepAll: true
+				])
+				cleanWs()
+			}
+		}
 }
