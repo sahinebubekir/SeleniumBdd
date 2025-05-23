@@ -48,13 +48,6 @@ pipeline {
             }
         }
 
-        stage('Publish Cucumber JSON Report') {
-			steps {
-				cucumberReport jsonReportDirectory: 'target/cucumber-reports',
-                              jsonReportFiles: 'cucumber.json',
-                              reportTitle: 'Cucumber Test Report'
-            }
-        }
     }
 
     post {
@@ -70,6 +63,19 @@ pipeline {
                 alwaysLinkToLastBuild: true,
                 keepAll: true
             ])
+            cucumber buildStatus: 'UNSTABLE',
+                failedFeaturesNumber: 1,
+                failedScenariosNumber: 1,
+                skippedStepsNumber: 1,
+                failedStepsNumber: 1,
+                classifications: [
+                        [key: 'Commit', value: '<a href="${GERRIT_CHANGE_URL}">${GERRIT_PATCHSET_REVISION}</a>'],
+                        [key: 'Submitter', value: '${GERRIT_PATCHSET_UPLOADER_NAME}']
+                ],
+                reportTitle: 'My report',
+                fileIncludePattern: '**/*cucumber-report.json',
+                sortingMethod: 'ALPHABETICAL',
+                trendsLimit: 100
         }
     }
 }
