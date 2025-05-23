@@ -25,7 +25,6 @@ pipeline {
                             --shm-size="2g" \
                             selenium/standalone-chrome:latest
                     '''
-                    // Wait for Selenium Grid to be ready
                     sh 'sleep 10'
                 }
             }
@@ -54,26 +53,27 @@ pipeline {
 		always {
 			script {
 				sh '''
-                docker rm -f selenium-chrome || true
-                docker network rm test-network || true
-            '''
-        }
-        cleanWs()
-
-         publishHTML(target: [
+                    docker rm -f selenium-chrome || true
+                    docker network rm test-network || true
+                '''
+            }
+            cleanWs()
+            // publishHTML doğrudan burada, script bloğu olmadan çağrılmalı:
+            publishHTML(target: [
+                reportDir: 'target/cucumber-reports',
+                reportFiles: 'cucumber-pretty.html',
+                reportName: 'Cucumber Test Report',
                 allowMissing: false,
                 alwaysLinkToLastBuild: true,
                 keepAll: true,
-                reportDir: 'target/cucumber-reports',
-                reportFiles: 'cucumber-pretty.html',
-                reportName: 'Cucumber Test Report'
+                allowMultipleReports: false
             ])
-    }
-    success {
+        }
+        success {
 			echo 'Tests completed successfully!'
-    }
-    failure {
+        }
+        failure {
 			echo 'Tests failed!'
+        }
     }
-}
 }
