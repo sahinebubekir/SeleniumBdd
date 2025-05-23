@@ -20,40 +20,19 @@ public class DriverFactory {
 
     public static void initDriver(String driverName) {
         if (driverThreadLocal.get() == null) {
-            String env = System.getProperty("env", "local").toLowerCase(); // default "local"
-            boolean isDocker = env.equals("docker");
-
             switch (driverName.toLowerCase()) {
                 case "chrome":
                     ChromeOptions chromeOptions = getChromeOptions();
-
-                    if (isDocker) {
-                        chromeOptions.addArguments("--headless=new");
-                        chromeOptions.addArguments("--no-sandbox");
-                        chromeOptions.addArguments("--disable-dev-shm-usage");
-                        chromeOptions.addArguments("--disable-gpu");
-                    } else {
-                        System.setProperty("webdriver.chrome.driver", "drivers/chromedriver.exe");
-                        validateDriver("chromedriver.exe");
-                    }
-
+                    setChromeDriverPathIfLocal();
                     driverThreadLocal.set(new ChromeDriver(chromeOptions));
                     break;
 
                 case "firefox":
-                    if (isDocker) {
-                        throw new UnsupportedOperationException("Firefox is not supported in Docker");
-                    } else {
-                        System.setProperty("webdriver.gecko.driver", "drivers/geckodriver.exe");
-                        validateDriver("geckodriver.exe");
-                        driverThreadLocal.set(new FirefoxDriver());
-                    }
+                    setGeckoDriverPathIfLocal();
+                    driverThreadLocal.set(new FirefoxDriver());
                     break;
 
                 case "safari":
-                    if (isDocker) {
-                        throw new UnsupportedOperationException("Safari is not supported in Docker");
-                    }
                     driverThreadLocal.set(new SafariDriver());
                     break;
 
@@ -67,18 +46,6 @@ public class DriverFactory {
         }
     }
 
-    private static ChromeOptions getChromeOptions() {
-        ChromeOptions chromeOptions = new ChromeOptions();
-
-        // Popup ve parola yöneticisi gibi şeyleri devre dışı bırak
-        Map<String, Object> chromePrefs = new HashMap<>();
-        chromePrefs.put("credentials_enable_service", false);
-        chromePrefs.put("profile.password_manager_enabled", false);
-        chromePrefs.put("profile.password_manager_leak_detection", false);
-        chromeOptions.setExperimentalOption("prefs", chromePrefs);
-        return chromeOptions;
-    }
-
     public static WebDriver getDriver() {
         return driverThreadLocal.get();
     }
@@ -89,6 +56,61 @@ public class DriverFactory {
             driver.quit();
             driverThreadLocal.remove();
         }
+    }
+
+    private static ChromeOptions getChromeOptions() {
+        ChromeOptions options = new ChromeOptions();
+
+        // Popup engelleme ve şifre hatırlatma kapatma ayarları (local için de geçerli)
+        Map<String, Object> prefs = new HashMap<>();
+        prefs.put("credentials_enable_service", false);
+        prefs.put("profile.password_manager_enabled", false);
+        prefs.put("profile.password_manager_leak_detection", false);
+        options.setExperimentalOption("prefs", prefs);
+
+        if (isCiEnvironment()) {
+            // CI / Docker ortamı için headless ve Linux uyumlu ayarlar
+            options.addArguments("--headless=new"); // veya "--headless"
+            options.addArguments("--no-sandbox");
+            options.addArguments("--disable-dev-shm-usage");
+            options.addArguments("--disable-gpu");
+        } else {
+            // Localde headless değil, GUI ile açılıyor (istersen buraya ekstra local opsiyon ekleyebilirsin)
+        }
+        return options;
+    }
+
+    private static void setChromeDriverPathIfLocal() {
+        if (!isCiEnvironment()) {
+            String userDir = System.getProperty("user.dir");
+            if (userDir.contains("/Users") || userDir.contains("/home")) {
+                validateDriver("chromedriver");
+                System.setProperty("webdriver.chrome.driver", "drivers/chromedriver");
+            } else if (userDir.contains("C:\\Users")) {
+                validateDriver("chromedriver.exe");
+                System.setProperty("webdriver.chrome.driver", "drivers/chromedriver.exe");
+            }
+        }
+    }
+
+    private static void setGeckoDriverPathIfLocal() {
+        if (!isCiEnvironment()) {
+            String userDir = System.getProperty("user.dir");
+            if (userDir.contains("C:\\Users")) {
+                validateDriver("geckodriver.exe");
+                System.setProperty("webdriver.gecko.driver", "drivers/geckodriver.exe");
+            } else {
+                validateDriver("geckodriver");
+                System.setProperty("webdriver.gecko.driver", "drivers/geckodriver");
+            }
+        }
+    }
+
+    private static boolean isCiEnvironment() {
+        // Jenkins veya Docker ortamını buradan kontrol et (env var, system prop vs)
+        // Örneğin, "CI" ortam değişkeni varsa true döndürebilirsin
+        String ci = System.getenv("CI");
+        return ci != null && ci.equalsIgnoreCase("true");
     }
 
     private static void validateDriver(String driverFileName) {

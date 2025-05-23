@@ -1,14 +1,15 @@
 pipeline {
     agent {
-        dockerfile {
-            filename 'Dockerfile'
-            dir '.'
+        docker {
+            image 'selenium/standalone-chrome:latest'
+            args '--shm-size=2g' // shared memory arttır, Chrome için önemli
         }
     }
 
     environment {
         MAVEN_OPTS = "-Dmaven.repo.local=.m2/repository"
         REPORT_DIR = "target/cucumber-report-html"
+        CI = "true" // Bu env değişkeni DriverFactory’de CI modunu tetikler
     }
 
     options {
@@ -43,15 +44,6 @@ pipeline {
             }
         }
 
-        /*stage('Send Slack Notification') {
-            steps {
-                slackSend(
-                    channel: '#automation-notifications',
-                    message: "*${env.JOB_NAME}* - Build #${env.BUILD_NUMBER} - *${currentBuild.currentResult}* (<${env.BUILD_URL}|Open>)"
-                )
-            }
-        }*/
-
         stage('Send Email') {
             steps {
                 mail to: 'sahinebubekir@yahoo.com',
@@ -60,19 +52,4 @@ pipeline {
             }
         }
     }
-
-    /*post {
-        failure {
-            slackSend(
-                color: '#FF0000',
-                message: "❌ Build Failed: ${env.JOB_NAME} #${env.BUILD_NUMBER} <${env.BUILD_URL}|Open>"
-            )
-        }
-        success {
-            slackSend(
-                color: '#00FF00',
-                message: "✅ Build Success: ${env.JOB_NAME} #${env.BUILD_NUMBER} <${env.BUILD_URL}|Open>"
-            )
-        }
-    } */
 }
