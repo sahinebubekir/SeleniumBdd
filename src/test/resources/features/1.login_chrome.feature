@@ -1,4 +1,4 @@
-@smoke @chrome
+@smoke
 Feature: Login Feature Chrome
 
   Scenario Outline: Successful login scenario

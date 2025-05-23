@@ -1,67 +1,62 @@
 package org.ebusahin.utilities;
 
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.remote.RemoteWebDriver;
-
-import java.net.MalformedURLException;
 import java.net.URL;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
 public class DriverFactory {
-    private static ThreadLocal<WebDriver> driver = new ThreadLocal<>();
+    private static WebDriver driver;
 
-    public static void initDriver(String browserName) {
+    public static WebDriver initDriver() {
         try {
-            String seleniumUrl = System.getProperty("selenium.url", "http://localhost:4444/wd/hub");
-            URL remoteAddress = new URL(seleniumUrl);
+            String runMode = System.getProperty("run.mode", "local"); // local veya remote
+            ChromeOptions options = getChromeOptions();
 
-            if (browserName.equalsIgnoreCase("chrome")) {
-                ChromeOptions options = getChromeOptions();
 
-                driver.set(new RemoteWebDriver(remoteAddress, options));
-
-            } else if (browserName.equalsIgnoreCase("firefox")) {
-                FirefoxOptions options = new FirefoxOptions();
-                options.addPreference("signon.rememberSignons", false);
-                options.addPreference("dom.disable_beforeunload", true);
-                options.addPreference("dom.webnotifications.enabled", false);
-                options.addPreference("permissions.default.desktop-notification", 2);
-
-                driver.set(new RemoteWebDriver(remoteAddress, options));
-
+            if ("remote".equals(runMode)) {
+                String seleniumHub = System.getProperty("selenium.url", "http://localhost:4444/wd/hub");
+                driver = new RemoteWebDriver(new URL(seleniumHub), options);
             } else {
-                throw new RuntimeException("Unsupported browser: " + browserName);
+
+                driver = new ChromeDriver(options);
             }
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-            throw new RuntimeException("Invalid Selenium Grid URL");
+
+            driver.manage().window().maximize();
+            driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
+
+            return driver;
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to initialize WebDriver: " + e.getMessage(), e);
         }
     }
 
     private static ChromeOptions getChromeOptions() {
-        Map<String, Object> chromePrefs = new HashMap<>();
+        ChromeOptions options = new ChromeOptions();
+        options.addArguments("--no-sandbox");
+        options.addArguments("--disable-dev-shm-usage");
+        options.addArguments("--remote-allow-origins=*");
+        final Map<String, Object> chromePrefs = new HashMap<>();
         chromePrefs.put("credentials_enable_service", false);
         chromePrefs.put("profile.password_manager_enabled", false);
-        chromePrefs.put("profile.password_manager_leak_detection", false);
+        chromePrefs.put("profile.password_manager_leak_detection", false); // <======== This is the important one
 
-        ChromeOptions options = new ChromeOptions();
         options.setExperimentalOption("prefs", chromePrefs);
-        options.addArguments("--disable-popup-blocking");
-        options.addArguments("--disable-notifications");
         return options;
     }
 
     public static WebDriver getDriver() {
-        return driver.get();
+        return driver;
     }
 
-    public static void quitDriver() {
-        if (driver.get() != null) {
-            driver.get().quit();
-            driver.remove();
+    public static void closeDriver() {
+        if (driver != null) {
+            driver.quit();
+            driver = null;
         }
     }
 }

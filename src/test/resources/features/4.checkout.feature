@@ -1,4 +1,3 @@
-@chrome @wip
 Feature: Checkout Feature
 
   Scenario: Checkout Scenario Sauce Labs Backpack

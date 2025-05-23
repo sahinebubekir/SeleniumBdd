@@ -35,7 +35,7 @@ public class LoginStepDefinitions {
 
     @Then("User closes the driver")
     public void userClosesTheDriver() {
-        DriverFactory.quitDriver();
+        DriverFactory.closeDriver();
     }
 
     @Then("Then the user should see a success message")
