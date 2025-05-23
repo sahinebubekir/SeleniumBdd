@@ -41,6 +41,7 @@ pipeline {
                             -w /app \
                             maven:3.9.2-eclipse-temurin-17 \
                             mvn clean test \
+                            -Drun.mode=remote \
                             -Dselenium.url=http://selenium-chrome:4444/wd/hub \
                             -Dbrowser=chrome
                     '''
