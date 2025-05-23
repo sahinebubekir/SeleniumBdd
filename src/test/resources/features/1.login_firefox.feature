@@ -4,7 +4,7 @@ Feature: Login Feature Chrome
   Scenario Outline: Successful login scenario
 
     Given User is on "swag_labs" login page
-    And Uer logs in with username "<usernames>" and password "secret_sauce"
+    And User logs in with username "<usernames>" and password "secret_sauce"
     Then Then the user should see a success message
     Then User closes the driver
     Examples: usernames
