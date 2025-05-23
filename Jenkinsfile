@@ -58,8 +58,16 @@ pipeline {
                 docker network rm test-network || true
             '''
         }
-        archiveArtifacts artifacts: 'target/cucumber-reports/**/*.*', allowEmptyArchive: true
         cleanWs()
+
+         publishHTML(target: [
+                allowMissing: false,
+                alwaysLinkToLastBuild: true,
+                keepAll: true,
+                reportDir: 'target/cucumber-reports',
+                reportFiles: 'cucumber-pretty.html',
+                reportName: 'Cucumber Test Report'
+            ])
     }
     success {
 			echo 'Tests completed successfully!'
