@@ -40,42 +40,33 @@ pipeline {
                             -w /app \
                             maven:3.9.2-eclipse-temurin-17 \
                             mvn clean verify \
-                                -Drun.mode=remote \
-                                -Dselenium.url=${SELENIUM_URL} \
-                                -Dbrowser=chrome
+                            -Drun.mode=remote \
+                            -Dselenium.url=http://selenium-chrome:4444/wd/hub \
+                            -Dbrowser=chrome
                     '''
                 }
             }
         }
 
+        stage('Generate Cucumber Report') {
+			steps {
+				cucumber buildStatus: 'UNSTABLE',
+                         jsonReportDirectory: 'target/cucumber-reports',
+                         jsonReportFiles: 'cucumber.json'
+            }
+        }
     }
 
     post {
 		always {
-			junit 'target/surefire-reports/*.xml'
-            archiveArtifacts artifacts: 'target/cucumber-reports/**', fingerprint: true
-
-            publishHTML(target: [
+			publishHTML(target: [
                 reportDir: 'target/cucumber-reports',
-                reportFiles: 'index.html',
-                reportName: 'Cucumber HTML Report',
+                reportFiles: 'cucumber-pretty.html',
+                reportName: 'Cucumber Test Report',
                 allowMissing: false,
                 alwaysLinkToLastBuild: true,
                 keepAll: true
             ])
-            cucumber buildStatus: 'UNSTABLE',
-                failedFeaturesNumber: 1,
-                failedScenariosNumber: 1,
-                skippedStepsNumber: 1,
-                failedStepsNumber: 1,
-                classifications: [
-                        [key: 'Commit', value: '<a href="${GERRIT_CHANGE_URL}">${GERRIT_PATCHSET_REVISION}</a>'],
-                        [key: 'Submitter', value: '${GERRIT_PATCHSET_UPLOADER_NAME}']
-                ],
-                reportTitle: 'My report',
-                fileIncludePattern: '**/*cucumber-report.json',
-                sortingMethod: 'ALPHABETICAL',
-                trendsLimit: 100
         }
     }
 }
