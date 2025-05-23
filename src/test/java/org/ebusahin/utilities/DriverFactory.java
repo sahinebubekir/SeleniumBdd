@@ -30,17 +30,22 @@ public class DriverFactory {
                     chromePrefs.put("profile.password_manager_enabled", false);
                     chromePrefs.put("profile.password_manager_leak_detection", false); // <======== This is the important one
 
-                    final ChromeOptions chromeOptions = new ChromeOptions();
-                    chromeOptions.setExperimentalOption("prefs", chromePrefs);
+                    final ChromeOptions options = new ChromeOptions();
+                    options.setExperimentalOption("prefs", chromePrefs);
 
                     validateDriver("chromedriver.exe");
                     if(System.getProperty("user.dir").contains("/Users")){
 
                         System.setProperty("webdriver.chrome.driver", "drivers/chromedriver");
-                }else{
+                }else if (System.getProperty("user.dir").contains("C:\\Users")){
                     System.setProperty("webdriver.chrome.driver", "drivers/chromedriver.exe");
-                }
-                    driverThreadLocal.set(new ChromeDriver(chromeOptions));
+                }else{
+                        options.addArguments("--headless=new"); // veya "--headless"
+                        options.addArguments("--no-sandbox");
+                        options.addArguments("--disable-dev-shm-usage");
+                        options.addArguments("--disable-gpu"); // opsiyonel
+                    }
+                    driverThreadLocal.set(new ChromeDriver(options));
                     break;
                 case "firefox":
                     validateDriver("geckodriver.exe");

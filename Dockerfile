@@ -1,10 +1,8 @@
-FROM maven:3.9.4-eclipse-temurin-17
-
-# Maven cache klasörü
-VOLUME /root/.m2
-
-# Bağımlılıkları daha önceden cache etmek istersen:
-COPY pom.xml .
-RUN mvn dependency:go-offline
-
+FROM maven:3.9.3-eclipse-temurin-17 AS build
+WORKDIR /app
 COPY . .
+RUN mvn clean test
+
+FROM selenium/standalone-chrome:latest
+WORKDIR /app
+COPY --from=build /app /app
