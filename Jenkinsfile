@@ -51,8 +51,7 @@ pipeline {
         stage('Generate Cucumber Report') {
 			steps {
 				cucumber buildStatus: 'UNSTABLE',
-                         jsonReportDirectory: 'target/cucumber-reports',
-                         jsonReportFiles: 'cucumber.json'
+                         jsonReportDirectory: 'target/cucumber-reports'
             }
         }
     }
