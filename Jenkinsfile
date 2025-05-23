@@ -57,7 +57,7 @@ pipeline {
                     docker network rm test-network || true
                 '''
             }
-            cleanWs()
+
             // publishHTML doğrudan burada, script bloğu olmadan çağrılmalı:
             publishHTML(target: [
                 reportDir: 'target/cucumber-reports',
@@ -68,6 +68,7 @@ pipeline {
                 keepAll: true,
                 allowMultipleReports: false
             ])
+            cleanWs()
         }
         success {
 			echo 'Tests completed successfully!'
