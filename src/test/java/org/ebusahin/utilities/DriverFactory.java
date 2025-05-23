@@ -1,125 +1,67 @@
 package org.ebusahin.utilities;
 
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.firefox.FirefoxDriver;
-import org.openqa.selenium.safari.SafariDriver;
+import org.openqa.selenium.firefox.FirefoxOptions;
+import org.openqa.selenium.remote.RemoteWebDriver;
 
-import java.io.File;
-import java.time.Duration;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
 public class DriverFactory {
+    private static ThreadLocal<WebDriver> driver = new ThreadLocal<>();
 
-    private static final ThreadLocal<WebDriver> driverThreadLocal = new ThreadLocal<>();
+    public static void initDriver(String browserName) {
+        try {
+            String seleniumUrl = System.getProperty("selenium.url", "http://localhost:4444/wd/hub");
+            URL remoteAddress = new URL(seleniumUrl);
 
-    private DriverFactory() {
-    }
+            if (browserName.equalsIgnoreCase("chrome")) {
+                ChromeOptions options = getChromeOptions();
 
-    public static void initDriver(String driverName) {
-        if (driverThreadLocal.get() == null) {
-            switch (driverName.toLowerCase()) {
-                case "chrome":
-                    ChromeOptions chromeOptions = getChromeOptions();
-                    setChromeDriverPathIfLocal();
-                    driverThreadLocal.set(new ChromeDriver(chromeOptions));
-                    break;
+                driver.set(new RemoteWebDriver(remoteAddress, options));
 
-                case "firefox":
-                    setGeckoDriverPathIfLocal();
-                    driverThreadLocal.set(new FirefoxDriver());
-                    break;
+            } else if (browserName.equalsIgnoreCase("firefox")) {
+                FirefoxOptions options = new FirefoxOptions();
+                options.addPreference("signon.rememberSignons", false);
+                options.addPreference("dom.disable_beforeunload", true);
+                options.addPreference("dom.webnotifications.enabled", false);
+                options.addPreference("permissions.default.desktop-notification", 2);
 
-                case "safari":
-                    driverThreadLocal.set(new SafariDriver());
-                    break;
+                driver.set(new RemoteWebDriver(remoteAddress, options));
 
-                default:
-                    throw new RuntimeException("Invalid browser name: " + driverName);
+            } else {
+                throw new RuntimeException("Unsupported browser: " + browserName);
             }
-
-            WebDriver driver = driverThreadLocal.get();
-            driver.manage().window().maximize();
-            driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
-        }
-    }
-
-    public static WebDriver getDriver() {
-        return driverThreadLocal.get();
-    }
-
-    public static void quitDriver() {
-        WebDriver driver = driverThreadLocal.get();
-        if (driver != null) {
-            driver.quit();
-            driverThreadLocal.remove();
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Invalid Selenium Grid URL");
         }
     }
 
     private static ChromeOptions getChromeOptions() {
+        Map<String, Object> chromePrefs = new HashMap<>();
+        chromePrefs.put("credentials_enable_service", false);
+        chromePrefs.put("profile.password_manager_enabled", false);
+        chromePrefs.put("profile.password_manager_leak_detection", false);
+
         ChromeOptions options = new ChromeOptions();
-
-        // Popup engelleme ve şifre hatırlatma kapatma ayarları (local için de geçerli)
-        Map<String, Object> prefs = new HashMap<>();
-        prefs.put("credentials_enable_service", false);
-        prefs.put("profile.password_manager_enabled", false);
-        prefs.put("profile.password_manager_leak_detection", false);
-        options.setExperimentalOption("prefs", prefs);
-
-        if (isCiEnvironment()) {
-            // CI / Docker ortamı için headless ve Linux uyumlu ayarlar
-            options.addArguments("--headless=new"); // veya "--headless"
-            options.addArguments("--no-sandbox");
-            options.addArguments("--disable-dev-shm-usage");
-            options.addArguments("--disable-gpu");
-        } else {
-            // Localde headless değil, GUI ile açılıyor (istersen buraya ekstra local opsiyon ekleyebilirsin)
-        }
+        options.setExperimentalOption("prefs", chromePrefs);
+        options.addArguments("--disable-popup-blocking");
+        options.addArguments("--disable-notifications");
         return options;
     }
 
-    private static void setChromeDriverPathIfLocal() {
-        if (!isCiEnvironment()) {
-            String userDir = System.getProperty("user.dir");
-            if (userDir.contains("/Users") || userDir.contains("/home")) {
-                validateDriver("chromedriver");
-                System.setProperty("webdriver.chrome.driver", "drivers/chromedriver");
-            } else if (userDir.contains("C:\\Users")) {
-                validateDriver("chromedriver.exe");
-                System.setProperty("webdriver.chrome.driver", "drivers/chromedriver.exe");
-            }
-        }
+    public static WebDriver getDriver() {
+        return driver.get();
     }
 
-    private static void setGeckoDriverPathIfLocal() {
-        if (!isCiEnvironment()) {
-            String userDir = System.getProperty("user.dir");
-            if (userDir.contains("C:\\Users")) {
-                validateDriver("geckodriver.exe");
-                System.setProperty("webdriver.gecko.driver", "drivers/geckodriver.exe");
-            } else {
-                validateDriver("geckodriver");
-                System.setProperty("webdriver.gecko.driver", "drivers/geckodriver");
-            }
-        }
-    }
-
-    private static boolean isCiEnvironment() {
-        // Jenkins veya Docker ortamını buradan kontrol et (env var, system prop vs)
-        // Örneğin, "CI" ortam değişkeni varsa true döndürebilirsin
-        String ci = System.getenv("CI");
-        return ci != null && ci.equalsIgnoreCase("true");
-    }
-
-    private static void validateDriver(String driverFileName) {
-        File driverFile = new File("drivers/" + driverFileName);
-        if (!driverFile.exists()) {
-            throw new RuntimeException("Driver not found: " + driverFile.getAbsolutePath());
-        }
-        if (!driverFile.canExecute()) {
-            driverFile.setExecutable(true);
+    public static void quitDriver() {
+        if (driver.get() != null) {
+            driver.get().quit();
+            driver.remove();
         }
     }
 }
