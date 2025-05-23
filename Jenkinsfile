@@ -3,7 +3,7 @@ pipeline {
 
     environment {
 		SELENIUM_URL = 'http://selenium-chrome:4444/wd/hub'
-        MAVEN_IMAGE = 'maven:3.9.2-eclipse-temurin-17' // Changed this line
+        MAVEN_IMAGE = 'maven:3.9.2-eclipse-temurin-17'
     }
 
     stages {
@@ -29,12 +29,15 @@ pipeline {
         stage('Run Maven Tests') {
 			steps {
 				script {
-					docker.image(MAVEN_IMAGE).inside("--shm-size=2g -v ${env.WORKSPACE}:/app -w /app --network selenium-net") {
-						sh '''
-                            mvn -v
+					sh """
+                        docker run --rm \
+                            --shm-size=2g \
+                            -v ${env.WORKSPACE}:/app \
+                            -w /app \
+                            --network selenium-net \
+                            ${MAVEN_IMAGE} \
                             mvn clean verify -Dcucumber.filter.tags=@chrome -Dselenium.url=${SELENIUM_URL}
-                        '''
-                    }
+                    """
                 }
             }
         }
