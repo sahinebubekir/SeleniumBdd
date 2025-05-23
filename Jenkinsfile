@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         SELENIUM_URL = 'http://selenium-chrome:4444/wd/hub'  // Container ismi ile erişim
-        MAVEN_IMAGE = 'maven:3.9.3-openjdk-17'
+        MAVEN_IMAGE = 'maven:3.9.2-openjdk-17-slim'
     }
 
     stages {
