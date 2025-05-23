@@ -17,5 +17,7 @@ public class LoginPage extends BasePage {
     @FindBy(id = "login-button")
     public WebElement loginButton;
 
+    @FindBy(tagName = "h3")
+    public WebElement errorText;
 
 }

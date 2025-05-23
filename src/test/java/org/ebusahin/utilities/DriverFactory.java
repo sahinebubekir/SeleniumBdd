@@ -2,11 +2,14 @@ package org.ebusahin.utilities;
 
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.safari.SafariDriver;
 
 import java.io.File;
 import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
 
 public class DriverFactory {
 
@@ -22,6 +25,14 @@ public class DriverFactory {
         if (driverThreadLocal.get() == null) {
             switch (driverName) {
                 case "chrome":
+                    final Map<String, Object> chromePrefs = new HashMap<>();
+                    chromePrefs.put("credentials_enable_service", false);
+                    chromePrefs.put("profile.password_manager_enabled", false);
+                    chromePrefs.put("profile.password_manager_leak_detection", false); // <======== This is the important one
+
+                    final ChromeOptions chromeOptions = new ChromeOptions();
+                    chromeOptions.setExperimentalOption("prefs", chromePrefs);
+
                     validateDriver("chromedriver.exe");
                     if(System.getProperty("user.dir").contains("/Users")){
 
@@ -29,7 +40,7 @@ public class DriverFactory {
                 }else{
                     System.setProperty("webdriver.chrome.driver", "drivers/chromedriver.exe");
                 }
-                    driverThreadLocal.set(new ChromeDriver());
+                    driverThreadLocal.set(new ChromeDriver(chromeOptions));
                     break;
                 case "firefox":
                     validateDriver("geckodriver.exe");

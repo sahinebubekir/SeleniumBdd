@@ -21,7 +21,7 @@ public class LoginStepDefinitions {
         driver.get(ConfigReader.getProperty(page));
     }
 
-    @And("When user logs in with username {string} and password {string}")
+    @And("User logs in with username {string} and password {string}")
     public void whenUserLogsInWithUsernameAndPassword(String username, String password) {
         loginPage.usernameTextBox.sendKeys(username);
         loginPage.passwordTextBox.sendKeys(password);
@@ -29,12 +29,18 @@ public class LoginStepDefinitions {
     }
 
     @Then("The user should see an error message")
-    public void thenTheUserShouldSeeASuccessMessage() {
-        Assert.assertTrue(homePage.productsText.isDisplayed());
+    public void thenTheUserShouldSeeAnErrorMessage() {
+        Assert.assertTrue(loginPage.errorText.isDisplayed());
     }
 
     @Then("User closes the driver")
     public void userClosesTheDriver() {
         DriverFactory.quitDriver();
     }
+
+    @Then("Then the user should see a success message")
+    public void thenTheUserShouldSeeASuccessMessage() {
+        Assert.assertTrue(homePage.productsText.isDisplayed());
+    }
+
 }

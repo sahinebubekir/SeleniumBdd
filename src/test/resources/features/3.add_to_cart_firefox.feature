@@ -4,7 +4,7 @@
 #İlk ürünü sepete ekler.
 #
 #Sepette ürün sayısının 1 olduğunu doğrular.
-@chrome
+@firefox
 Feature: Product add
   Scenario: Adding Sauce Labs Backpack to cart
     Given User is on "swag_labs" login page
