@@ -29,26 +29,27 @@ pipeline {
                 }
             }
         }
+		stage('Run Tests') {
+					steps {
+						script {
+							sh '''
+							docker run --rm \
+								--network test-network \
+								-v "${WORKSPACE}":/app \
+								-w /app \
+								maven:3.9.2-eclipse-temurin-17 \
+								mvn clean verify \
+								-Drun.mode=remote \
+								-Dselenium.url=http://selenium-chrome:4444/wd/hub \
+								-Dbrowser=chrome
+						'''
+					}
+				}
+			}
 
     }
 
-		stage('Run Tests') {
-			steps {
-				script {
-					sh '''
-					docker run --rm \
-						--network test-network \
-						-v "${WORKSPACE}":/app \
-						-w /app \
-						maven:3.9.2-eclipse-temurin-17 \
-						mvn clean verify \
-						-Drun.mode=remote \
-						-Dselenium.url=http://selenium-chrome:4444/wd/hub \
-						-Dbrowser=chrome
-				'''
-			}
-		}
-	}
+
 
 		post {
 				always {
