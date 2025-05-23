@@ -10,6 +10,7 @@ public class Hooks {
 
     @Before
     public void setUp(Scenario scenario) {
+        System.out.println(System.getProperty("user.dir"));
         String browserName = "";
         for (String tag : scenario.getSourceTagNames()) {
             System.out.println(tag);

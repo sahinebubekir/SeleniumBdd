@@ -28,7 +28,7 @@ public class LoginStepDefinitions {
         loginPage.loginButton.click();
     }
 
-    @Then("Then the user should see a success message")
+    @Then("The user should see an error message")
     public void thenTheUserShouldSeeASuccessMessage() {
         Assert.assertTrue(homePage.productsText.isDisplayed());
     }

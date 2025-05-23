@@ -23,7 +23,12 @@ public class DriverFactory {
             switch (driverName) {
                 case "chrome":
                     validateDriver("chromedriver.exe");
+                    if(System.getProperty("user.dir").contains("/Users")){
+
+                        System.setProperty("webdriver.chrome.driver", "drivers/chromedriver");
+                }else{
                     System.setProperty("webdriver.chrome.driver", "drivers/chromedriver.exe");
+                }
                     driverThreadLocal.set(new ChromeDriver());
                     break;
                 case "firefox":
