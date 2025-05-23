@@ -61,7 +61,7 @@ pipeline {
 					alwaysLinkToLastBuild: true,
 					keepAll: true
 				])
-				cleanWs()
+
 			}
 		}
 }
