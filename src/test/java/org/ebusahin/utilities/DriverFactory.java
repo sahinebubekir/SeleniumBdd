@@ -12,7 +12,7 @@ import java.util.Map;
 public class DriverFactory {
     private static WebDriver driver;
 
-    public static WebDriver initDriver() {
+    public static void initDriver() {
         try {
             String runMode = System.getProperty("run.mode", "local"); // local veya remote
             ChromeOptions options = getChromeOptions();
@@ -29,7 +29,6 @@ public class DriverFactory {
             driver.manage().window().maximize();
             driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
 
-            return driver;
         } catch (Exception e) {
             throw new RuntimeException("Failed to initialize WebDriver: " + e.getMessage(), e);
         }
